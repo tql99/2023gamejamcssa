@@ -290,7 +290,7 @@ int isHit(int px, int py, int pw, int ph, int ex, int ey, int ew, int eh){
 }
 void trap(int i){
   //Wall
-  if(mapList[i] == 99){
+  if(mapTile[i].type == 99){
     player.x = prev_x;
     player.y = prev_y;
         //soundManager.attack();
@@ -307,13 +307,15 @@ void trap(int i){
     initStage(0);
   }
   //death
-  if(mapTile[i].type == 4){
+  if(mapTile[i].type == 4 && mapTile[i].activated == false){
     player.health = 0;
+    mapTile[i].activated = true;
     print("Death");
   }
   //build wall
-  if(mapTile[i].type == 69){
-    mapList[i-29] = 99;
+  if(mapTile[i].type == 69 && mapTile[i].activated == false){
+    mapTile[i-29].type = 99;
+    mapTile[i].activated = true;
   }
   //spike
   if(mapTile[i].type == 11 && mapTile[i].activated == false){
