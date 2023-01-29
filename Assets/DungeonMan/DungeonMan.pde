@@ -1,4 +1,4 @@
-int cols = 29;
+int cols = 29;  //keep track of these variable on map to implement rotate
 int rows = 32;
 int dx = 0;
 int dy = 0;
@@ -109,6 +109,24 @@ void draw(){
     text("Press Enter to Next", width/2, height/2 + 100);
   }
   
+  if(clear_flag == -1){
+    fill(0, 100);
+    rect(0, 0, width, height);
+    textAlign(CENTER, CENTER);
+    
+    textSize(32);
+    fill(255);
+    text("STAGE " + (level + 1) + "/" + map.num_map, width/2, height/2 - 100);
+    
+    textSize(64);
+    fill(255);
+    text("You Lost", width/2, height/2);
+    
+    textSize(32);
+    fill(255);
+    text("Press Enter to Play Again", width/2, height/2 + 100);
+  }
+  
   //int x_index = int(x / width);
   //int y_index = int(y / height);
   //camera_x += (x_index * width - camera_x) * 0.1;
@@ -150,6 +168,9 @@ void keyPressed(){
       level ++;
       level = level % map.num_map;
       initStage(level); 
+    }
+    if(clear_flag == -1){
+      initStage(level);
     }
   }
 }
@@ -237,11 +258,13 @@ void trap(int i){
   if(mapTile[i].type == 4 && mapTile[i].activated == false){
     player.health = 0;
     mapTile[i].activated = true;
+    clear_flag = -1;
     print("Death");
   }
   //build wall
   if(mapTile[i].type == 69 && mapTile[i].activated == false){
     mapTile[i-29].type = 99;
+    
     mapTile[i].activated = true;
   }
   //spike
@@ -251,7 +274,7 @@ void trap(int i){
     mapTile[i].activated = true;
   }
   //shuffle controls
-  if(mapTile[i].type == 420){
+  if(mapTile[i].type == 420 && mapTile[i].activated == false){
     if(left == 'a'){
       left = 'd';
       right = 'a';
@@ -266,5 +289,6 @@ void trap(int i){
       up = 'w';
       down = 's';
     }
+    mapTile[i].activated = true;
   }//420
 }//end trap
