@@ -52,8 +52,11 @@ void draw(){
     
     if(isHit(player.x, player.y, playerSize, playerSize, block_x, block_y, 100, 100) == 1){
         trap(i);
+    }else{
+      mapTile[i].activated = false;
     }
     
+    //render
     push();
     
     fill(80);
