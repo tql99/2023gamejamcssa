@@ -1,5 +1,3 @@
-int cols = 29;  //keep track of these variable on map to implement rotate
-int rows = 32;
 int dx = 0;
 int dy = 0;
 int camera_x = 0;
@@ -39,35 +37,52 @@ void draw(){
   player.x += dx * 5;
   player.y += dy * 5;
   
-  if(player.x < 0 || player.x > cols*100){
-    player.x = cols*100 - player.x;
+  if(player.x < 0 || player.x > map.cols*100){
+    player.x = map.cols*100 - player.x;
   }
-  if(player.y < 0 || player.y > rows*100){
-    player.y = rows*100 - player.y;
+  if(player.y < 0 || player.y > map.rows*100){
+    player.y = map.rows*100 - player.y;
   }
   
   for(int i=0; i<map.length_; i++){
-    int block_x = i % cols * 100;
-    int block_y = int(i / cols) * 100;
+    int block_x = i % map.cols * 100;
+    int block_y = int(i / map.cols) * 100;
     
     if(isHit(player.x, player.y, playerSize, playerSize, block_x, block_y, 100, 100) == 1){
         trap(i);
     }else{
-      mapTile[i].activated = false;
+      mapTile[i].deactivated = false;
     }
     
-    //render
+    
     push();
     
+    //render color
     fill(80);
-    if(mapTile[i].type == 99){
+    if(mapTile[i].type == 99){ //wall
       fill(150);
     }
-    if(mapTile[i].type == 2){
+    if(mapTile[i].type == 2){ //start
       fill(80, 255); 
     }
-    if(mapTile[i].type == 4){
+    if(mapTile[i].type == 4){ //death
       fill(255, 255,0); 
+    }
+    if(mapTile[i].type == 990){ //path but looks like wall
+      fill(140); 
+    }
+    if(mapTile[i].type == 11){  //spike
+      if(frameCount % (4*frameRate) <= frameRate){
+        fill(0);
+        mapTile[i].deactivated = false;
+      }
+      else{
+        fill(80);
+        mapTile[i].deactivated = true;
+      }
+    }
+    if(mapTile[i].type == 3 && mapTile[i].showKey ==  true){
+      fill(90);
     }
     
     rect(block_x - camera_x, block_y - camera_y, 100, 100);
@@ -77,13 +92,14 @@ void draw(){
       rect(block_x + 10 - camera_x, block_y + 10 - camera_y, 100-20, 100-20, 5);
     }
     pop();
-  }
+    
+  }//end for loop 
   
   renderPlayer(player.x, player.y, dx, dy);
 
   for(int i=0; i<map.length_; i++){
-    int block_x = i % cols * 100;
-    int block_y = int(i / cols) * 100;
+    int block_x = i % map.cols * 100;
+    int block_y = int(i / map.cols) * 100;
     if(mapTile[i].type == 2){
       fill(0, 0,20,50); 
       rect(block_x - camera_x, block_y - camera_y, 100, 100);
@@ -145,7 +161,6 @@ void printArray(int [] array){
   }
   println();
 }
-
 
 void keyPressed(){
   //if(bgm.isPlaying() == false){
@@ -211,20 +226,22 @@ void initStage(int level){
   level = level % map.num_map;
   map = new Map(level);
   mapTile = map.createTile();
-  initPlayerPos();
+  initPlayerPos(2);
+  reverseKey('a','d','w','s');
+  frameRate(60);
   clear_flag = 0;
 }
 
-void initPlayerPos(){
+void initPlayerPos(int position){
   int index = 0;
   for (int i = 0; i < map.length_; i ++){
-    if (mapTile[i].type == 2){
+    if (mapTile[i].type == position){
       index = i;
       break;
     }
   }
-  player.x = index%cols * 100;
-  player.y = (int)(index/cols) * 100;
+  player.x = index%map.cols * 100;
+  player.y = (int)(index/map.cols) * 100;
 
 }
 
@@ -237,12 +254,15 @@ int isHit(int px, int py, int pw, int ph, int ex, int ey, int ew, int eh){
   return 0;
 }
 void trap(int i){
+  
   //Wall
-  if(mapTile[i].type == 99){
+  if(mapTile[i].type == 99 || mapTile[i].type == 909){
     player.x = prev_x;
     player.y = prev_y;
         //soundManager.attack();
   }
+  
+  
   //finish tile
   if(mapTile[i].type == 1){
     if(clear_flag == 0){
@@ -250,45 +270,110 @@ void trap(int i){
       //soundManager.bass();
     }
   }
+  
+  
   //loop back to start
   if(mapTile[i].type == 82){
     initStage(0);
   }
+  
+  
   //death
-  if(mapTile[i].type == 4 && mapTile[i].activated == false){
+  if(mapTile[i].type == 4 && mapTile[i].deactivated == false){
     player.health = 0;
-    mapTile[i].activated = true;
+    mapTile[i].deactivated = true;
     clear_flag = -1;
     print("Death");
   }
+  
+  
   //build wall
-  if(mapTile[i].type == 69 && mapTile[i].activated == false){
-    mapTile[i-29].type = 99;
-    
-    mapTile[i].activated = true;
+  if(mapTile[i].type == 69 && mapTile[i].deactivated == false){
+    map.randomWall(i);
+    mapTile[i].deactivated = true;
   }
+  
+  //build path
+  if(mapTile[i].type == 96 && mapTile[i].deactivated == false){
+    map.randomPath(i);
+    mapTile[i].deactivated = true;
+  }
+  
   //spike
-  if(mapTile[i].type == 11 && mapTile[i].activated == false){
+  if(mapTile[i].type == 11 && mapTile[i].deactivated == false){
     player.health--;
+    if(dx < 0){
+      dx += 4;
+    }else{
+      dx -= 4;
+    }
+    if(dy < 0){
+      dy += 4;
+    }else{
+      dy -= 4;
+    }
+    if(dx == 0 && dy == 0){
+      dx +=4;
+    }
     print(player.health);
-    mapTile[i].activated = true;
+    mapTile[i].deactivated = true;
   }
+  
+  //add health
+  if(mapTile[i].type == 6 && mapTile[i].deactivated == false){
+    player.health++;
+    print(player.health);
+    mapTile[i].deactivated = true;
+  }
+  
+  //x2 speed
+  if(mapTile[i].type == 5 && mapTile[i].deactivated == false){
+    frameRate(120);
+    mapTile[i].deactivated = true;
+  }
+  
+  //first time step on 333
+  if(mapTile[i].type == 333 && mapTile[i].deactivated == false && mapTile[i].first == false){
+    for(int j=0; j<map.length_;j++){
+      if(mapTile[j].type == 3){
+        mapTile[j].showKey = true;
+      }      
+    }
+    mapTile[i].first = true;
+  }else if(mapTile[i].type == 333 && mapTile[i].deactivated == false && mapTile[i].first == true){ //bomb
+    if(player.numKey >= 3){
+      map.bomb(i);
+      mapTile[i].deactivated = true;
+    }
+  }
+  
+  //key 
+  if(mapTile[i].type == 3 && mapTile[i].deactivated == false && mapTile[i].showKey == true){
+    player.numKey++;
+    mapTile[i].showKey = false;
+    mapTile[i].deactivated = true;
+  }
+  
+  //teleport
+  if(mapTile[i].type == 86 && mapTile[i].deactivated == false){
+    initPlayerPos(68);
+    mapTile[i].deactivated = true;
+  }
+  
   //shuffle controls
-  if(mapTile[i].type == 420 && mapTile[i].activated == false){
+  if(mapTile[i].type == 420 && mapTile[i].deactivated == false){
     if(left == 'a'){
-      left = 'd';
-      right = 'a';
+      reverseKey('d','a','s','w');
     }else{
-      left = 'a';
-      right = 'd';
+      reverseKey('a','d','w','s');
     }
-    if(up == 'w'){
-      up = 's';
-      down = 'w';
-    }else{
-      up = 'w';
-      down = 's';
-    }
-    mapTile[i].activated = true;
+    mapTile[i].deactivated = true;
   }//420
 }//end trap
+
+void reverseKey(char left_, char right_, char up_, char down_){
+  left = left_;
+  right = right_;
+  up = up_;
+  down = down_;
+}

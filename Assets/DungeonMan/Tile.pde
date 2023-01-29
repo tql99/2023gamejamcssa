@@ -1,9 +1,13 @@
 class Tile{
   int type;
-  boolean activated;
+  boolean deactivated;
+  boolean first;
+  boolean showKey;
   
   Tile(int type){
     this.type = type;
-    activated = false;
+    deactivated = false;
+    first = false;
+    showKey = false;
   }
 }
