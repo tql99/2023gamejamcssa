@@ -81,8 +81,8 @@ void draw(){
         mapTile[i].deactivated = true;
       }
     }
-    if(mapTile[i].type == 3 && mapTile[i].showKey ==  true){
-      fill(90);
+    if(mapTile[i].type == 3 && mapTile[i].showKey ==  true){ //key color
+      fill(100,90,100);
     }
     
     rect(block_x - camera_x, block_y - camera_y, 100, 100);
@@ -226,6 +226,7 @@ void initStage(int level){
   level = level % map.num_map;
   map = new Map(level);
   mapTile = map.createTile();
+  player = new Player();
   initPlayerPos(2);
   reverseKey('a','d','w','s');
   frameRate(60);
