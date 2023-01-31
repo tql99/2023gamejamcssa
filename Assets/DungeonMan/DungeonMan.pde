@@ -1,3 +1,6 @@
+import processing.sound.*;
+SoundFile theme;
+
 int dx = 0;
 int dy = 0;
 int camera_x = 0;
@@ -138,12 +141,12 @@ void setup() {
   smooth();
   frameRate(15);
   
-  ////this loads the file based on the file name
-  //file = new SoundFile(this,"");
-  //file.play();
+  //this loads the file based on the file name
+  theme = new SoundFile(this,"theme.wav");
+  theme.play();
   
-  ////this changes the volume level (number between 0 and 1)
-  //file.amp(.5);
+  //this changes the volume level (number between 0 and 1)
+  theme.amp(.69);
   
   for (int i = 0; i < frog.length; i++){
     frog[i] = loadImage("frog" +i+ ".png");
